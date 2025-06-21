@@ -3,120 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Clock</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <style>
-        /* Custom styles for the clock, overriding some Tailwind defaults for specific effects */
-        body {
-            background-color: #1a202c; /* Dark background for contrast */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            font-family: 'Inter', sans-serif; /* Recommended font */
-            color: #e2e8f0; /* Light text color */
-        }
-
-        .clock-container {
-            background-color: #2d3748; /* Slightly lighter dark background for the clock */
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5); /* Soft shadow */
-            border-radius: 20px; /* More rounded corners */
-            padding: 2.5rem 3.5rem; /* More padding */
-            text-align: center;
-            border: 2px solid #4a5568; /* Subtle border */
-        }
-
-        .time-display {
-            font-size: 5rem; /* Larger font for time */
-            font-weight: bold;
-            letter-spacing: 3px; /* Add some letter spacing */
-            text-shadow: 0 0 15px rgba(0, 255, 255, 0.7), 0 0 25px rgba(0, 255, 255, 0.5); /* Neon glow effect */
-            transition: all 0.5s ease-in-out; /* Smooth transition for time changes */
-        }
-
-        .date-display {
-            font-size: 1.5rem; /* Size for date */
-            margin-top: 1rem;
-            color: #a0aec0; /* Slightly muted color for date */
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .clock-container {
-                padding: 2rem 2.5rem;
-            }
-            .time-display {
-                font-size: 3.5rem; /* Adjust font size for smaller screens */
-            }
-            .date-display {
-                font-size: 1.2rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .clock-container {
-                padding: 1.5rem 2rem;
-            }
-            .time-display {
-                font-size: 2.5rem; /* Even smaller for mobile */
-                letter-spacing: 1px;
-            }
-            .date-display {
-                font-size: 1rem;
-            }
-        }
-    </style>
-    <script>
-        /**
-         * Function to update the digital clock display.
-         * It fetches the current time and date, formats them, and updates the DOM.
-         */
-        function updateClock() {
-            const now = new Date(); // Get the current date and time
-
-            // Format the time: HH:MM:SS
-            // getHours() returns 0-23
-            // getMinutes() returns 0-59
-            // getSeconds() returns 0-59
-            // padStart(2, '0') ensures two digits (e.g., 5 becomes 05)
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            const timeString = `${hours}:${minutes}:${seconds}`;
-
-            // Format the date: Day, Month DD, YYYY
-            const options = {
-                weekday: 'long', // e.g., "Monday"
-                year: 'numeric',   // e.g., "2023"
-                month: 'long',    // e.g., "September"
-                day: 'numeric'     // e.g., "25"
-            };
-            const dateString = now.toLocaleDateString(undefined, options); // Use user's locale for date format
-
-            // Update the HTML elements
-            document.getElementById('time').textContent = timeString;
-            document.getElementById('date').textContent = dateString;
-        }
-
-        // Call updateClock initially to avoid a 1-second delay before the clock appears
-        // Set an interval to update the clock every second (1000 milliseconds)
-        window.onload = function() {
-            updateClock(); // Initial call
-            setInterval(updateClock, 1000); // Update every second
-        };
-    </script>
+    <title>Typing Speed Test</title>
+    <!-- Tailwind CSS CDN for utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Link to external CSS file -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="clock-container">
-        <!-- Display for the time -->
-        <div id="time" class="time-display">
-            00:00:00
+    <div class="container">
+        <h1 class="text-3xl md:text-4xl font-bold text-center mb-4 text-blue-400">Typing Speed Test</h1>
+
+        <!-- Area to display the text to be typed -->
+        <div id="text-display" class="text-display select-none">
+            Click "Start Test" to begin!
         </div>
-        <!-- Display for the date -->
-        <div id="date" class="date-display">
-            Loading Date...
+
+        <!-- Textarea for user input -->
+        <textarea id="text-input" class="text-input" placeholder="Start typing here..." rows="6" disabled></textarea>
+
+        <!-- Button to start/restart the test -->
+        <button id="start-button" class="button">Start Test</button>
+
+        <!-- Area to display results -->
+        <div id="results" class="result-display hidden">
+            <p>Words Per Minute (WPM): <span id="wpm">0</span></p>
+            <p>Accuracy: <span id="accuracy">0%</span></p>
         </div>
     </div>
+
+    <!-- Link to external JavaScript file -->
+    <script src="script.js"></script>
 </body>
 </html>
