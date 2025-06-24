@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cursor Animation</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #000;
+      cursor: none; /* Hide default cursor */
+      overflow: hidden;
+    }
+
+    .cursor {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background-color: white;
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <div class="cursor" id="cursor"></div>
+
+  <script>
+    const cursor = document.getElementById('cursor');
+
+    document.addEventListener('mousemove', (e) => {
+      cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+    });
+  </script>
+</body>
+</html>
