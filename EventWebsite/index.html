@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hackathon X — Futuristic Portfolio (anime.js)</title>
+
+  <!-- Flip no-js to js early so hidden states only apply when JS is active -->
+  <script>
+    document.documentElement.classList.remove('no-js');
+    document.documentElement.classList.add('js');
+  </script>
+
+  <style>
+    :root{
+      --bg1:#0a0f1f; --bg2:#04070f; --primary:#72f5f9; --accent:#8a5cf6;
+      --glow:#00eaff; --warning:#ff4d6d; --success:#2ee59d;
+      --text:#e6f1ff; --muted:#9fb3c8; --glass: rgba(255,255,255,0.08);
+    }
+    *{ box-sizing:border-box }
+    html,body{ height:100% }
+    html{ scroll-behavior:smooth }
+    body{
+      margin:0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, #19304a 0%, transparent 60%),
+        radial-gradient(900px 500px at 120% 10%, #241a3a 0%, transparent 60%),
+        linear-gradient(120deg, var(--bg2), var(--bg1));
+      background-attachment: fixed; overflow-x:hidden;
+    }
+    /* Optional background image layer (add assets/bg.jpg) */
+    body::before{
+      content:""; position:fixed; inset:0; background-image:url('assets/bg.jpg');
+      background-size:cover; background-position:center; opacity:.18;
+      filter:contrast(1.1) saturate(1.1); pointer-events:none; mix-blend-mode:overlay;
+    }
+
+    /* subtle stars canvas */
+    #stars{ position:fixed; inset:0; z-index:0; pointer-events:none; }
+
+    /* Navbar */
+    .nav{
+      position:sticky; top:0; z-index:50; display:flex; gap:.75rem; align-items:center; justify-content:space-between;
+      padding:.75rem 1rem;
+      background: linear-gradient(180deg, rgba(4,7,15,.75), rgba(4,7,15,.35) 60%, transparent);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .brand{ display:flex; align-items:center; gap:.6rem; font-weight:800; letter-spacing:.5px; }
+    .brand .logo{
+      width:36px; height:36px; border-radius:10px;
+      background: conic-gradient(from 180deg at 50% 50%, var(--accent), var(--glow), var(--accent));
+      box-shadow: 0 0 18px rgba(138,92,246,.6), 0 0 36px rgba(0,234,255,.35);
+      transform: scale(.9);
+    }
+    .navlinks{ display:flex; flex-wrap:wrap; gap:.5rem; }
+
+    /* Neon nav buttons */
+    .nav-btn{
+      position:relative; isolation:isolate;
+      padding:.6rem 1rem; border-radius:999px; color:var(--text);
+      background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14);
+      text-decoration:none; font-weight:600; letter-spacing:.2px;
+      transform: translateY(0) scale(1);
+      overflow:hidden;
+    }
+    .nav-btn::before{
+      content:""; position:absolute; inset:-2px; border-radius:999px;
+      background: linear-gradient(90deg, transparent, var(--glow), transparent);
+      filter: blur(6px); opacity:0; z-index:-1;
+      background-size: 200% 100%;
+    }
+
+    /* Ripple ink element (added dynamically) */
+    .ink{
+      position:absolute; pointer-events:none; border-radius:999px;
+      background: radial-gradient(circle at center, rgba(0,234,255,.35), rgba(0,234,255,0));
+      transform: translate(-50%,-50%) scale(0);
+      mix-blend-mode:screen;
+    }
+
+    /* Hero */
+    .hero{ position:relative; z-index:1; padding:8rem 1.25rem 4rem; text-align:center; max-width:1200px; margin:0 auto;}
+    .kicker{ color:var(--muted); text-transform:uppercase; letter-spacing:.35em; font-size:.75rem; margin-bottom:.75rem; }
+    .title{ font-size: clamp(2rem, 2.5vw + 1.6rem, 4rem); line-height:1.1; margin:0; text-shadow: 0 0 20px rgba(0,234,255,.12); }
+    .subtitle{ color:var(--muted); max-width:800px; margin:.75rem auto 1.5rem; }
+    .cta-row{ display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; margin-top:1.25rem; }
+
+    /* Only hide elements initially when JS is confirmed */
+    .js .kicker, .js .title, .js .subtitle, .js .cta-row{ opacity:0; transform: translateY(16px); }
+    .js .card{ opacity:0; transform: translateY(28px); }
+
+    /* Buttons */
+    .btn{
+      display:inline-flex; align-items:center; gap:.5rem;
+      padding:.9rem 1.2rem; border-radius:14px; font-weight:700; letter-spacing:.3px;
+      border:1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.04));
+      color:var(--text); text-decoration:none; position:relative; overflow:hidden;
+      transform: translateY(0) scale(1);
+    }
+    .btn.primary{
+      background: linear-gradient(135deg, #0ee6ff 0%, #8a5cf6 100%);
+      color:#06121f; border:none;
+      box-shadow: 0 10px 25px rgba(0,234,255,.25), 0 0 40px rgba(138,92,246,.25);
+    }
+
+    /* Sections */
+    .section{ position:relative; z-index:1; padding:4rem 1.25rem; max-width:1200px; margin:0 auto;}
+    .grid{ display:grid; gap:1rem; grid-template-columns: repeat(12, 1fr);}
+    .card{
+      grid-column: span 12; background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border:1px solid rgba(255,255,255,.12); border-radius:18px; padding:1.25rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25), inset 0 0 40px rgba(255,255,255,.02);
+    }
+    @media (min-width: 900px){ .card.third{ grid-column: span 4;} .card.half{ grid-column: span 6;}}
+
+    .h{ margin:.25rem 0 0.35rem; font-size:1.35rem;}
+    .p{ margin:.25rem 0; color:var(--muted);}
+
+    .tag{
+      display:inline-block; padding:.4rem .7rem; margin:.25rem; border-radius:999px; font-size:.8rem; color:var(--text);
+      background: rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14);
+      box-shadow: inset 0 0 12px rgba(255,255,255,.05);
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .tag:hover{ transform: translateY(-2px) scale(1.02); box-shadow: 0 0 12px rgba(0,234,255,.25); }
+
+    .schedule{ list-style:none; padding:0; margin:0; }
+    .schedule li{
+      display:flex; gap:.75rem; padding:.6rem .8rem; border-radius:12px;
+      background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); margin:.4rem 0;
+    }
+    .time{ font-weight:800; min-width:80px; color:var(--glow); }
+
+    /* Modal */
+    .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:100; }
+    .modal.show{ display:flex; }
+    .modal .overlay{ position:absolute; inset:0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); opacity:0; }
+    .dialog{
+      position:relative; z-index:1; width:min(720px, 92vw); border-radius:18px;
+      background: rgba(8,12,24,.9); border:1px solid rgba(255,255,255,.12);
+      box-shadow: 0 10px 40px rgba(0,0,0,.55); overflow:hidden;
+      opacity:0; transform: scale(.92);
+    }
+    .dialog header{ display:flex; justify-content:space-between; align-items:center; padding:1rem 1.25rem; border-bottom:1px solid rgba(255,255,255,.08);}
+    .dialog header h3{ margin:0; }
+    .dialog .content{ padding:1rem 1.25rem 1.25rem; }
+    .form{ display:grid; gap:.9rem; grid-template-columns:1fr 1fr; }
+    .form .full{ grid-column: 1 / -1; }
+    .field{ display:flex; flex-direction:column; gap:.35rem;}
+    input, select, textarea{
+      background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14);
+      border-radius:12px; padding:.75rem .9rem; color:var(--text);
+    }
+    input:focus, select:focus, textarea:focus{ outline:none; border-color: var(--glow); box-shadow: 0 0 0 3px rgba(0,234,255,.2); }
+    .error{ color: var(--warning); font-size:.85rem; min-height:1.1rem; }
+    .note{ color: var(--muted); font-size:.9rem; }
+    .btn-row{ display:flex; gap:.6rem; justify-content:flex-end; margin-top:.5rem;}
+    .btn.danger{ background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06)); border-color: rgba(255,255,255,.18); color:var(--text);}
+    .btn.success{ background: linear-gradient(135deg, #2ee59d, #00eaff); color:#021015; border:none; }
+
+    footer{ text-align:center; color:var(--muted); padding:2rem 1rem; }
+    .glow-text{ text-shadow: 0 0 8px rgba(0,234,255,.4), 0 0 16px rgba(0,234,255,.25); }
+  </style>
+</head>
+<body>
+  <canvas id="stars"></canvas>
+
+  <nav class="nav">
+    <div class="brand">
+      <div class="logo"></div>
+      <span>Hackathon X</span>
+    </div>
+    <div class="navlinks">
+      <a class="nav-btn" href="#about">About</a>
+      <a class="nav-btn" href="#tracks">Tracks</a>
+      <a class="nav-btn" href="#schedule">Schedule</a>
+      <a class="nav-btn" href="#prizes">Prizes</a>
+      <a class="nav-btn" href="#faq">FAQ</a>
+      <a class="nav-btn" href="#contact">Contact</a>
+      <button class="nav-btn" id="open-register">Register</button>
+    </div>
+  </nav>
+
+  <header class="hero" id="home">
+    <div class="kicker">48-hour coding sprint</div>
+    <h1 class="title glow-text">Build the Future at Hackathon X</h1>
+    <p class="subtitle">A portfolio-style showcase meets a high-energy hackathon, featuring anime.js motion and glass cards for a premium feel.</p>
+    <div class="cta-row">
+      <a class="btn primary" href="#about">Explore Event</a>
+      <button class="btn" id="open-register-hero">Register Now</button>
+    </div>
+  </header>
+
+  <section class="section" id="about">
+    <div class="grid">
+      <div class="card half">
+        <h3 class="h">About</h3>
+        <p class="p">Join innovators, designers, and developers to prototype bold ideas with mentorship and live demos.</p>
+        <div>
+          <span class="tag">48 hrs</span>
+          <span class="tag">Onsite + Remote</span>
+          <span class="tag">Mentors</span>
+          <span class="tag">Swag</span>
+        </div>
+      </div>
+      <div class="card half">
+        <h3 class="h">Venue & Dates</h3>
+        <p class="p">Sept 20–22, 2025 · Tech Park Arena · Hybrid participation supported.</p>
+        <div>
+          <span class="tag">Wi‑Fi</span>
+          <span class="tag">Food</span>
+          <span class="tag">Breakout rooms</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="tracks">
+    <h2 class="h">Tracks</h2>
+    <div class="grid">
+      <div class="card third">
+        <h3 class="h">AI & Agents</h3>
+        <p class="p">LLMs, RAG, copilots, and autonomous workflows.</p>
+        <button class="tag">Sample Ideas</button>
+      </div>
+      <div class="card third">
+        <h3 class="h">Web3 & Identity</h3>
+        <p class="p">Smart contracts, wallets, and verifiable credentials.</p>
+        <button class="tag">Sample Ideas</button>
+      </div>
+      <div class="card third">
+        <h3 class="h">Sustainability</h3>
+        <p class="p">Energy, climate data, and circular economy tools.</p>
+        <button class="tag">Sample Ideas</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="schedule">
+    <h2 class="h">Schedule</h2>
+    <ul class="schedule">
+      <li><span class="time">Day 1</span>Check‑in, team formation, and kickoff.</li>
+      <li><span class="time">Day 2</span>Build sprints, mentor office hours, mid‑point demos.</li>
+      <li><span class="time">Day 3</span>Final polish, demo day, awards, and networking.</li>
+    </ul>
+  </section>
+
+  <section class="section" id="prizes">
+    <h2 class="h">Prizes</h2>
+    <div class="grid">
+      <div class="card third">
+        <h3 class="h">Grand Prize</h3>
+        <p class="p">$5,000 + accelerator interview.</p>
+      </div>
+      <div class="card third">
+        <h3 class="h">Runner Up</h3>
+        <p class="p">$2,000 + cloud credits.</p>
+      </div>
+      <div class="card third">
+        <h3 class="h">Track Winners</h3>
+        <p class="p">$500 each + swag.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="faq">
+    <h2 class="h">FAQ</h2>
+    <div class="grid">
+      <div class="card half">
+        <h4 class="h">Who can join?</h4>
+        <p class="p">Students, professionals, and hobbyists from all backgrounds.</p>
+      </div>
+      <div class="card half">
+        <h4 class="h">Team size?</h4>
+        <p class="p">1–5 members; solo hackers welcome.</p>
+      </div>
+      <div class="card half">
+        <h4 class="h">Code of Conduct</h4>
+        <p class="p">Be respectful, inclusive, and collaborative at all times.</p>
+      </div>
+      <div class="card half">
+        <h4 class="h">IP & Open Source</h4>
+        <p class="p">Teams own their IP; open‑source encouraged.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="contact">
+    <h2 class="h">Contact</h2>
+    <div class="card">
+      <p class="p">Questions? Email team@hackathonx.dev or reach out during office hours.</p>
+      <button class="btn" id="open-register-footer">Register Now</button>
+    </div>
+  </section>
+
+  <footer>
+    © 2025 Hackathon X · Made with love and neon.
+  </footer>
+
+  <!-- Registration Modal -->
+  <div class="modal" id="register-modal" aria-hidden="true" aria-labelledby="register-title" role="dialog">
+    <div class="overlay" data-close></div>
+    <div class="dialog">
+      <header>
+        <h3 id="register-title">Hackathon Registration</h3>
+        <button class="btn danger" data-close>&times;</button>
+      </header>
+      <div class="content">
+        <form id="register-form" class="form" novalidate>
+          <div class="field">
+            <label for="fullName">Full name</label>
+            <input id="fullName" name="fullName" type="text" required minlength="2" placeholder="Alex Johnson" />
+            <span class="error" id="err-fullName"></span>
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" required placeholder="alex@domain.com" />
+            <span class="error" id="err-email"></span>
+          </div>
+          <div class="field">
+            <label for="team">Team name</label>
+            <input id="team" name="team" type="text" placeholder="Quantum Coders" />
+            <span class="error" id="err-team"></span>
+          </div>
+          <div class="field">
+            <label for="size">Team size</label>
+            <select id="size" name="size" required>
+              <option value="">Select</option>
+              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            </select>
+            <span class="error" id="err-size"></span>
+          </div>
+          <div class="field full">
+            <label for="track">Track</label>
+            <select id="track" name="track" required>
+              <option value="">Choose a track</option>
+              <option>AI & Agents</option>
+              <option>Web3 & Identity</option>
+              <option>Sustainability</option>
+            </select>
+            <span class="error" id="err-track"></span>
+          </div>
+          <div class="field full">
+            <label for="notes">Notes</label>
+            <textarea id="notes" name="notes" rows="3" placeholder="Links, dietary needs, accessibility, etc."></textarea>
+            <span class="error" id="err-notes"></span>
+          </div>
+          <div class="note full">Data is stored locally for demo; wire up a backend to persist registrations.</div>
+          <div class="btn-row full">
+            <button type="button" class="btn danger" data-close>Cancel</button>
+            <button type="submit" class="btn success">Submit Registration</button>
+          </div>
+        </form>
+
+        <div id="success" class="card" style="display:none; margin-top:1rem;">
+          <h3 class="h">Registration confirmed</h3>
+          <p class="p">Confirmation ID: <span id="confId"></span></p>
+          <p class="p">A confirmation email will be sent if email delivery is configured.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load anime.js locally (download into assets/anime.min.js) -->
+  <script src="assets/anime.min.js" defer></script>
+
+  <!-- Main script -->
+  <script defer>
+    // Starfield background
+    const starsCanvas = document.getElementById('stars');
+    const sctx = starsCanvas.getContext('2d');
+    let stars = [];
+    function resizeStars(){ starsCanvas.width = innerWidth; starsCanvas.height = innerHeight; }
+    function initStars(){
+      stars = Array.from({length: 120}, () => ({
+        x: Math.random()*starsCanvas.width,
+        y: Math.random()*starsCanvas.height,
+        r: Math.random()*1.2 + 0.2,
+        v: Math.random()*0.15 + 0.02
+      }));
+    }
+    function drawStars(){
+      sctx.clearRect(0,0,starsCanvas.width,starsCanvas.height);
+      sctx.fillStyle = 'rgba(255,255,255,0.9)';
+      for(const s of stars){
+        sctx.globalAlpha = Math.random()*0.8 + 0.2;
+        sctx.beginPath(); sctx.arc(s.x, s.y, s.r, 0, Math.PI*2); sctx.fill();
+        s.x += s.v; if(s.x > starsCanvas.width) s.x = 0;
+      }
+      requestAnimationFrame(drawStars);
+    }
+    addEventListener('resize', ()=>{ resizeStars(); initStars(); });
+    resizeStars(); initStars(); drawStars();
+
+    // Graceful fallback: if anime isn't present, reveal content and stop
+    if(!window.anime){
+      document.querySelectorAll('.kicker,.title,.subtitle,.cta-row,.card').forEach(el=>{
+        el.style.opacity = 1; el.style.transform = 'none';
+      });
+    } else {
+      // Page-load timeline with anime.js
+      const tl = anime.timeline({ autoplay: true, easing: 'easeOutQuad' });
+      tl.add({ targets: '.logo', scale: [0.8, 1], rotate: [ -20, 0 ], duration: 600 })
+        .add({ targets: '.kicker', opacity: [0,1], translateY: [16,0], duration: 400 }, '-=150')
+        .add({ targets: '.title', opacity: [0,1], translateY: [16,0], duration: 550 }, '-=120')
+        .add({ targets: '.subtitle', opacity: [0,1], translateY: [16,0], duration: 500 }, '-=120')
+        .add({ targets: '.cta-row', opacity: [0,1], translateY: [16,0], duration: 450 }, '-=120');
+
+      // Hover motion + ripple for nav buttons and CTAs
+      function attachMotion(el){
+        el.addEventListener('mouseenter', ()=>{
+          anime.remove(el);
+          anime({ targets: el, scale: 1.05, translateY: -2, duration: 180, easing: 'easeOutQuad' });
+          el.style.boxShadow = '0 0 16px rgba(0,234,255,.28), inset 0 0 12px rgba(0,234,255,.08)';
+        });
+        el.addEventListener('mouseleave', ()=>{
+          anime.remove(el);
+          anime({ targets: el, scale: 1.00, translateY: 0, duration: 180, easing: 'easeOutQuad',
+            complete(){ el.style.boxShadow = ''; }
+          });
+        });
+        el.addEventListener('pointerdown', (e)=>{
+          const rect = el.getBoundingClientRect();
+          const ink = document.createElement('span');
+          ink.className = 'ink';
+          const size = Math.max(rect.width, rect.height) * 1.2;
+          ink.style.width = ink.style.height = size + 'px';
+          ink.style.left = (e.clientX - rect.left) + 'px';
+          ink.style.top  = (e.clientY - rect.top) + 'px';
+          el.appendChild(ink);
+          anime({
+            targets: ink,
+            scale: [0, 6],
+            opacity: [0.55, 0],
+            duration: 650,
+            easing: 'easeOutQuad',
+            complete(){ ink.remove(); }
+          });
+        });
+      }
+      document.querySelectorAll('.nav-btn, .btn').forEach(attachMotion);
+
+      // Scroll reveal for cards
+      const observer = new IntersectionObserver((entries, obs)=>{
+        entries.forEach(entry=>{
+          if(entry.isIntersecting){
+            const cards = entry.target.querySelectorAll('.card');
+            if(cards.length){
+              anime({
+                targets: cards,
+                opacity: [0,1],
+                translateY: [28,0],
+                duration: 600,
+                delay: anime.stagger(80),
+                easing: 'easeOutCubic'
+              });
+            }
+            obs.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15 });
+      document.querySelectorAll('.section').forEach(s => observer.observe(s));
+    }
+
+    // Modal controls with anime transitions (works even if anime is absent)
+    const modal = document.getElementById('register-modal');
+    const overlay = modal.querySelector('.overlay');
+    const dialog  = modal.querySelector('.dialog');
+    function openModal(){
+      modal.classList.add('show');
+      modal.setAttribute('aria-hidden','false');
+      if(window.anime){
+        anime.set([overlay, dialog], { opacity: 0 });
+        anime.set(dialog, { scale: .92 });
+        anime({ targets: overlay, opacity: [0,1], duration: 200, easing: 'linear' });
+        anime({ targets: dialog, opacity: [0,1], scale: [0.92,1], duration: 280, easing: 'easeOutCubic' });
+      } else {
+        overlay.style.opacity = 1;
+        dialog.style.opacity = 1; dialog.style.transform = 'none';
+      }
+    }
+    function closeModal(){
+      if(window.anime){
+        anime({ targets: dialog, opacity: [1,0], scale: [1, .95], duration: 200, easing: 'easeInCubic' });
+        anime({ targets: overlay, opacity: [1,0], duration: 220, easing: 'linear',
+          complete(){ modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); }
+        });
+      } else {
+        modal.classList.remove('show'); modal.setAttribute('aria-hidden','true');
+      }
+    }
+    document.getElementById('open-register').addEventListener('click', openModal);
+    document.getElementById('open-register-hero').addEventListener('click', openModal);
+    document.getElementById('open-register-footer').addEventListener('click', openModal);
+    modal.addEventListener('click', (e)=>{ if(e.target.dataset.close !== undefined) closeModal(); });
+
+    // Registration logic with validation + local storage
+    const form = document.getElementById('register-form');
+    const success = document.getElementById('success');
+    const confId = document.getElementById('confId');
+
+    function setErr(id, msg){ document.getElementById(id).textContent = msg || ''; }
+
+    function validate(){
+      let ok = true;
+      const name = document.getElementById('fullName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const size = document.getElementById('size').value;
+      const track = document.getElementById('track').value;
+
+      setErr('err-fullName'); setErr('err-email'); setErr('err-size'); setErr('err-track');
+
+      if(name.length < 2){ setErr('err-fullName','Please enter a valid name (min 2 characters).'); ok = false; }
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      if(!emailOk){ setErr('err-email','Please enter a valid email.'); ok = false; }
+      if(!size){ setErr('err-size','Select team size.'); ok = false; }
+      if(!track){ setErr('err-track','Choose a track.'); ok = false; }
+
+      return ok;
+    }
+
+    function loadRegs(){ try{ return JSON.parse(localStorage.getItem('registrations') || '[]'); } catch{ return []; } }
+    function saveRegs(list){ localStorage.setItem('registrations', JSON.stringify(list)); }
+
+    function uniqueEmail(email){
+      const regs = loadRegs();
+      return !regs.some(r => r.email.toLowerCase() === email.toLowerCase());
+    }
+
+    function makeId(){
+      return 'HX-' + Math.random().toString(36).slice(2,6).toUpperCase() + '-' + Date.now().toString().slice(-4);
+    }
+
+    form.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      if(!validate()) return;
+
+      const data = {
+        fullName: document.getElementById('fullName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        team: document.getElementById('team').value.trim(),
+        size: document.getElementById('size').value,
+        track: document.getElementById('track').value,
+        notes: document.getElementById('notes').value.trim()
+      };
+
+      if(!uniqueEmail(data.email)){
+        setErr('err-email','This email is already registered for this device.');
+        return;
+      }
+
+      const regs = loadRegs();
+      const id = makeId();
+      regs.push({ id, ...data, createdAt: new Date().toISOString() });
+      saveRegs(regs);
+
+      confId.textContent = id;
+      success.style.display = 'block';
+      if(window.anime){
+        anime.set(success, { opacity: 0, translateY: 12 });
+        anime({ targets: success, opacity: [0,1], translateY: [12,0], duration: 350, easing: 'easeOutQuad' });
+      } else {
+        success.style.opacity = 1; success.style.transform = 'none';
+      }
+      form.reset();
+    });
+  </script>
+</body>
+</html>
